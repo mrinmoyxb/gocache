@@ -28,12 +28,6 @@ func NewCache(cleanupInterval time.Duration) *Cache {
 	return c
 }
 
-func (item Item) isExpired() bool {
-	if item.expiration == 0 {
-		return false
-	}
-	return time.Now().UnixNano() > item.expiration
-}
 
 func (c *Cache) Set(key string, value string, ttl time.Duration) {
 	c.mu.Lock()
@@ -73,6 +67,19 @@ func (c *Cache) Delete(key string) {
 
 	delete(c.store, key)
 }
+
+func (c *Cache) isExists(key string) (bool){
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	_, exists := c.store[key]
+	if !exists {
+		return false
+	}
+
+	return true
+}
+
 
 func (c *Cache) startActiveCleaner(interval time.Duration) {
 	ticker := time.NewTicker(interval)
