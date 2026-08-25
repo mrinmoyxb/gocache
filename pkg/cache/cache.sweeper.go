@@ -2,7 +2,7 @@ package cache
 
 import "time"
 
-func (c *Cache) startSweeper(interval time.Duration){
+func (c *Cache) startSweeper(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
 		c.mu.Lock()

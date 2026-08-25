@@ -6,7 +6,7 @@ import (
 )
 
 type Cache struct {
-	mu sync.RWMutex
+	mu    sync.RWMutex
 	store map[string]Item
 }
 
