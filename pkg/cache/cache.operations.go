@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (c *Cache) Set(key string, value string, ttl time.Duration) {
+func (c *Cache) Set(key string, value string, ttl time.Duration) bool {
 	var exp int64
 	if ttl > 0 {
 		exp = time.Now().Add(ttl).UnixNano()
@@ -15,14 +15,15 @@ func (c *Cache) Set(key string, value string, ttl time.Duration) {
 	defer c.mu.Unlock()
 
 	c.store[key] = Item{value: value, expiration: exp}
+	return true
 }
 
-func (c *Cache) Get(key string) (interface{}, bool) {
+func (c *Cache) Get(key string) (string, bool) {
 	c.mu.RLock()
 	item, exists := c.store[key]
 	if !exists {
 		c.mu.RUnlock()
-		return nil, false
+		return "", false
 	}
 
 	if !item.isExpired() {
@@ -35,14 +36,15 @@ func (c *Cache) Get(key string) (interface{}, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	item, exists = c.store[key]
+	if !exists {
+		return "", false
+	}
 
-		
-		if exists && item.isExpired() {
-			delete(c.store, key)
-			defer c.mu.Unlock()
-			return nil, false
-		}
-	
+	if exists && item.isExpired() {
+		delete(c.store, key)
+		return "", false
+	}
 
 	return item.value, true
 }
@@ -68,14 +70,13 @@ func (c *Cache) Exists(keys ...string) map[string]bool {
 	defer c.mu.RUnlock()
 
 	for _, key := range keys {
-		_, exists := c.store[key]
-		if exists {
+		item, exists := c.store[key]
+		if exists && !item.isExpired() {
 			result[key] = true
 		} else {
 			result[key] = false
 		}
 	}
-
 	return result
 }
 
