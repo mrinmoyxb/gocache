@@ -1,8 +1,8 @@
 package command
 
 import (
-	"fmt"
 	"gocache/pkg/cache"
+	"gocache/protocol"
 )
 
 type Engine struct {
@@ -15,7 +15,7 @@ func NewEngine(c *cache.Cache) *Engine {
 	}
 }
 
-func (e *Engine) Executed(cmd Command) (string, error) {
+func (e *Engine) Executed(cmd Command) (protocol.Response, error) {
 	switch cmd.Name {
 	case "SET":
 		return e.handleSet(cmd)
@@ -26,13 +26,13 @@ func (e *Engine) Executed(cmd Command) (string, error) {
 	case "EXISTS":
 		return e.handleExists(cmd)
 	default:
-		return "", fmt.Errorf("unknown commad: %s", cmd.Name)
+		return protocol.Error("unknown command"), nil
 	}
 }
 
-func (e *Engine) handleSet(cmd Command) (string, error) {
+func (e *Engine) handleSet(cmd Command) (protocol.Response, error) {
 	if len(cmd.Args) != 2 {
-		return "", fmt.Errorf("SET requires key and value")
+		return protocol.Error("wrong number of arguments for 'SET'"), nil
 	}
 
 	key := cmd.Args[0]
@@ -40,34 +40,34 @@ func (e *Engine) handleSet(cmd Command) (string, error) {
 
 	e.cache.Set(key, value, 0)
 
-	return "OK", nil
+	return protocol.SimpleString("OK"), nil
 }
 
-func (e *Engine) handleGet(cmd Command) (string, error) {
+func (e *Engine) handleGet(cmd Command) (protocol.Response, error) {
 	if len(cmd.Args) != 1 {
-		return "", fmt.Errorf("GET requires key")
+		return protocol.Error("wrong number of arguments for 'GET'"), nil
 	}
 
 	value, exists := e.cache.Get(cmd.Args[0])
 	if !exists {
-		return "(nil)", nil
+		return protocol.Null(), nil
 	}
 
-	return value, nil
+	return protocol.BulkString(value), nil
 }
 
-func (e *Engine) handleDelete(cmd Command) (string, error) {
+func (e *Engine) handleDelete(cmd Command) (protocol.Response, error) {
 	if len(cmd.Args) == 0 {
-		return "", fmt.Errorf("DEL requires at least one key")
+		return protocol.Error("wrong number of arguments for 'GET'"), nil
 	}
 	count := e.cache.Delete(cmd.Args...)
 
-	return fmt.Sprintf("%d", count), nil
+	return protocol.Integer(int64(count)), nil
 }
 
-func (e *Engine) handleExists(cmd Command) (string, error) {
+func (e *Engine) handleExists(cmd Command) (protocol.Response, error) {
 	if len(cmd.Args) == 0 {
-		return "", fmt.Errorf("EXISTS requires at least one key")
+		return protocol.Error("wrong number of arguments for 'EXISTS'"), nil
 	}
 
 	result := e.cache.Exists(cmd.Args...)
@@ -79,5 +79,5 @@ func (e *Engine) handleExists(cmd Command) (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("%d", count), nil
+	return protocol.Integer(int64(count)), nil
 }

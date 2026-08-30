@@ -34,7 +34,7 @@ func (r *Reader) Read() (RESPValue, error) {
 	case '$':
 		return r.readBulkString()
 	case '*':
-	return r.readArray()
+		return r.readArray()
 	default:
 		return RESPValue{}, fmt.Errorf("unknown RESP type: %q", typeByte)
 	}
@@ -130,14 +130,14 @@ func (r *Reader) readArray() (RESPValue, error) {
 
 	line = line[:len(line)-2]
 
-	var length int 
+	var length int
 	_, err = fmt.Sscanf(line, "%d", &length)
 	if err != nil {
 		return RESPValue{}, err
 	}
 
 	values := make([]RESPValue, length)
-	for i:=0; i<length; i++ {
+	for i := 0; i < length; i++ {
 		value, err := r.Read()
 		if err != nil {
 			return RESPValue{}, err
@@ -145,9 +145,8 @@ func (r *Reader) readArray() (RESPValue, error) {
 		values[i] = value
 	}
 
-
 	return RESPValue{
-		Type: '*',
+		Type:  '*',
 		Array: values,
 	}, nil
 }
