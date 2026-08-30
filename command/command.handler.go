@@ -25,10 +25,6 @@ func (e *Engine) Executed(cmd Command) (string, error) {
 		return e.handleDelete(cmd)
 	case "EXISTS":
 		return e.handleExists(cmd)
-	// case "EXPIRE":
-	// 	return e.handleExpire(cmd)
-	// case "TTL":
-	// 	return e.handleTTL(cmd)
 	default:
 		return "", fmt.Errorf("unknown commad: %s", cmd.Name)
 	}

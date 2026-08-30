@@ -7,7 +7,7 @@ type Item struct {
 	expiration int64
 }
 
-func (item Item) isExpired() bool {
+func (item *Item) isExpired() bool {
 	if item.expiration == 0 {
 		return false
 	}
